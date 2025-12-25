@@ -1,0 +1,10 @@
+- type: http
+  host: https://jsonplaceholder.typicode.com/
+  path: posts/1
+  frequency: 5
+  duration: 1m
+# - type: kafka
+#   host: http://localhost:9092
+#   topic: sample_topic
+#   frequency: 20
+#   duration: 1h

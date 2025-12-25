@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: barrage
+  labels:
+    app: barrage
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: barrage
+  template:
+    metadata:
+      labels:
+        app: barrage
+    spec:
+      containers:
+      - name: barrage
+        image: barrage:latest
+        ports:
+        - containerPort: 3000
+        env:
+        - name: RUST_LOG
+          value: "info"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: barrage
+spec:
+  selector:
+    app: barrage
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 3000
+  type: LoadBalancer

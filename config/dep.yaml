@@ -1,0 +1,3 @@
+instance: 2
+cpu: 100m
+mem: 128Mi
