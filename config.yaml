@@ -1,0 +1,8 @@
+- type: http
+  host: https://sample.com
+  path: api/v1/health
+  frequency: 10
+- type: kafka
+  host: http://localhost:9092
+  topic: sample_topic
+  frequency: 20
