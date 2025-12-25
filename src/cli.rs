@@ -9,27 +9,34 @@ pub struct Cli {
 
 #[derive(Subcommand)]
 pub enum Commands {
-    /// Start the server to receive triggers (Manual)
     Server,
-    /// Manually trigger a message send via CLI
-    Send {
-        #[arg(short, long)]
-        data: String,
-        #[arg(short, long, default_value_t = 0)]
-        task_index: usize,
-    },
-    /// Start as a periodic worker for a specific task
+    // Send {
+    //     #[arg(short, long)]
+    //     data: String,
+    //     #[arg(short, long, default_value_t = 0)]
+    //     task_index: usize,
+    // },
     Worker {
         #[arg(short, long, default_value_t = 0)]
         task_index: usize,
-        #[arg(short, long, default_value = "config.yaml")]
+        #[arg(short, long, default_value = "config/traffic.yaml")]
         config: String,
     },
     /// Generate K8s manifests for all tasks in config
-    Deploy {
-        #[arg(short, long, default_value = "config.yaml")]
+    Init {
+        #[arg(short, long, default_value = "config/dep.yaml")]
         config: String,
         #[arg(short, long, default_value = "k8s/generated")]
         output: String,
+    },
+    /// Trigger application to k8s environment with defined config
+    Serve {
+        #[arg(short, long, default_value = "k8s/generated")]
+        input: String,
+    },
+    /// Stop k8s environment (Delete resources)
+    Stop {
+        #[arg(short, long, default_value = "k8s/generated")]
+        input: String,
     },
 }

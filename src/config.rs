@@ -1,7 +1,14 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct AppConfig {
+pub struct DeploymentConfig {
+    pub instance: i32,
+    pub cpu: String,
+    pub mem: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct TrafficConfig {
     pub tasks: Vec<TaskConfig>,
 }
 
@@ -13,7 +20,8 @@ pub struct TaskConfig {
     pub host: String,
     pub path: Option<String>,
     pub topic: Option<String>,
-    pub frequency: u64, // times per minute
+    pub frequency: u64,
+    pub duration: String,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
@@ -23,7 +31,13 @@ pub enum TaskType {
     Kafka,
 }
 
-impl AppConfig {
+impl DeploymentConfig {
+    pub fn from_yaml(content: &str) -> Result<Self, serde_yaml::Error> {
+        serde_yaml::from_str(content)
+    }
+}
+
+impl TrafficConfig {
     pub fn from_yaml(content: &str) -> Result<Self, serde_yaml::Error> {
         let tasks: Vec<TaskConfig> = serde_yaml::from_str(content)?;
         Ok(Self { tasks })
