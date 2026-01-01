@@ -1,5 +1,6 @@
 mod config;
 mod sender;
+mod req_type;
 mod server;
 mod cli;
 mod k8s_gen;
@@ -24,7 +25,7 @@ async fn main() -> anyhow::Result<()> {
             tracing::info!("Trigger 'server' command");
             let traffic_content = std::fs::read_to_string("config/traffic.yaml").unwrap_or_default();
             let traffic = TrafficConfig::from_yaml(&traffic_content)?;
-            let sender = create_sender(&traffic.tasks[0]);
+            let sender = create_sender(&traffic.tasks[0]).await?;
             server::run_server(sender).await?;
         }
         // Commands::Send { data, task_index } => {
@@ -39,7 +40,7 @@ async fn main() -> anyhow::Result<()> {
             let traffic_content = std::fs::read_to_string(config_path)?;
             let traffic = TrafficConfig::from_yaml(&traffic_content)?;
             let task = &traffic.tasks[task_index];
-            let sender = create_sender(task);
+            let sender = create_sender(task).await?;
             sender::run_periodic(sender, task.frequency, task.duration.clone()).await?;
         }
         Commands::Init { config: config_path, output } => {

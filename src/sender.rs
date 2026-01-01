@@ -2,79 +2,24 @@ use async_trait::async_trait;
 use anyhow::Result;
 use crate::config::{TaskConfig, TaskType};
 use std::time::Duration;
+use crate::req_type::{HttpSender, KafkaSender};
 
 #[async_trait]
 pub trait Sender: Send + Sync {
     async fn send(&self, data: serde_json::Value) -> Result<()>;
 }
 
-pub struct HttpSender {
-    client: reqwest::Client,
-    url: String,
-}
-
-impl HttpSender {
-    pub fn new(host: String, path: Option<String>) -> Self {
-        let url = match path {
-            Some(p) => format!("{}/{}", host.trim_end_matches('/'), p.trim_start_matches('/')),
-            None => host,
-        };
-        Self {
-            client: reqwest::Client::new(),
-            url,
-        }
-    }
-}
-
-#[async_trait]
-impl Sender for HttpSender {
-    async fn send(&self, data: serde_json::Value) -> Result<()> {
-        tracing::info!("HTTP: GET from {}", self.url);
-        let res = self.client.get(&self.url)
-            .json(&data)
-            .send()
-            .await?;
-        
-        if res.status().is_success() {
-            tracing::info!("HTTP: Successfully sent data to {}", self.url);
-            Ok(())
-        } else {
-            let err_msg = format!("HTTP: Failed to send data, status: {}", res.status());
-            tracing::error!("{}", err_msg);
-            Err(anyhow::anyhow!(err_msg))
-        }
-    }
-}
-
-pub struct KafkaSender {
-    broker: String,
-    topic: String,
-}
-
-impl KafkaSender {
-    pub fn new(broker: String, topic: String) -> Self {
-        Self { broker, topic }
-    }
-}
-
-#[async_trait]
-impl Sender for KafkaSender {
-    async fn send(&self, data: serde_json::Value) -> Result<()> {
-        tracing::info!("Kafka: Sending data to broker {} topic {}: {:?}", self.broker, self.topic, data);
-        Ok(())
-    }
-}
-
-pub fn create_sender(config: &TaskConfig) -> Box<dyn Sender> {
+pub async fn create_sender(config: &TaskConfig) -> Result<Box<dyn Sender>> {
     match config.task_type {
         TaskType::Http => {
-            Box::new(HttpSender::new(config.host.clone(), config.path.clone()))
+            Ok(Box::new(HttpSender::new(config.host.clone(), config.path.clone())))
         },
         TaskType::Kafka => {
-            Box::new(KafkaSender::new(
+            let sender = KafkaSender::new(
                 config.host.clone(),
                 config.topic.clone().unwrap_or_default(),
-            ))
+            ).await?;
+            Ok(Box::new(sender))
         }
     }
 }

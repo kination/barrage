@@ -11,9 +11,6 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 serde_yaml = "0.9"
 reqwest = { version = "0.11", features = ["json"] }
-# rdkafka is complex for a base code, I'll use a placeholder or adding it if necessary.
-# Let's add it but comment it out or keep it simple.
-# rdkafka = { version = "0.36", features = ["dynamic-linking"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 anyhow = "1.0"
@@ -22,3 +19,4 @@ chrono = { version = "0.4", features = ["serde"] }
 humantime = "2.1"
 k8s-openapi = { version = "0.23.0", features = ["v1_31"] }
 kube = { version = "0.97.0", features = ["derive"] }
+rdkafka = { version = "0.36", features = ["cmake-build"] }

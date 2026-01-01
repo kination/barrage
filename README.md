@@ -1,6 +1,6 @@
-# Barrage
+# Barrage (WIP)
 
-**Barrage** is a lightweight, high-performance testing tool designed to push various types of data to target API server, or Kafka broker
+**Barrage** is lightweight, high-performance testing tool designed to push various types of data to target API server, Kafka broker, or more.
 
 It is built with Rust(on top of k8s), allowing you to simulate high-frequency data traffic or schedule periodic data synchronization.
 
@@ -26,11 +26,19 @@ mem: 128Mi     # Memory limit/request
 ### 2. `config/traffic.yaml` (Traffic Spec)
 Defines the actual data tasks to be performed.
 ```yaml
+# For HTTP API traffic
 - type: http
   host: https://jsonplaceholder.typicode.com/
   path: posts/1
   frequency: 5    # 5 requests per minute
   duration: 1m    # Stop after 1 minute
+
+# For Kafka producing traffic
+- type: kafka
+  host: http://localhost:9092
+  topic: sample_topic
+  frequency: 10
+  duration: 1h    # Stop after 1 hour
 ```
 
 ---
@@ -38,8 +46,11 @@ Defines the actual data tasks to be performed.
 ## Getting Started
 
 ### 1. Manual Local Build
-To build the project locally:
+To build the project locally, you need `cmake`, `pkg-config`, and `openssl` installed on your system (for `rdkafka` support).
 ```bash
+# On macOS
+brew install cmake pkg-config openssl
+
 cargo build --release
 ```
 
