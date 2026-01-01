@@ -1,5 +1,6 @@
 FROM rust:1.85 AS builder
 WORKDIR /usr/src/app
+RUN apt-get update && apt-get install -y cmake pkg-config libssl-dev zlib1g-dev
 COPY . .
 RUN cargo build --release
 
