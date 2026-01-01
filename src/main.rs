@@ -1,14 +1,9 @@
-mod config;
-mod sender;
-mod req_type;
-mod server;
-mod cli;
-mod k8s_gen;
-
 use clap::Parser;
-use crate::cli::{Cli, Commands};
-use crate::config::{DeploymentConfig, TrafficConfig};
-use crate::sender::create_sender;
+use barrage::cli::{Cli, Commands};
+use barrage::config::{DeploymentConfig, TrafficConfig};
+use barrage::sender::{create_sender, run_periodic};
+use barrage::server;
+use barrage::k8s_gen;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -21,33 +16,23 @@ async fn main() -> anyhow::Result<()> {
     
     match cli.command {
         Commands::Server => {
-            // Server mode might need a different config or just the first one
             tracing::info!("Trigger 'server' command");
             let traffic_content = std::fs::read_to_string("config/traffic.yaml").unwrap_or_default();
             let traffic = TrafficConfig::from_yaml(&traffic_content)?;
             let sender = create_sender(&traffic.tasks[0]).await?;
             server::run_server(sender).await?;
         }
-        // Commands::Send { data, task_index } => {
-        //     let traffic_content = std::fs::read_to_string("traffic.yaml").unwrap_or_default();
-        //     let traffic = TrafficConfig::from_yaml(&traffic_content)?;
-        //     let sender = create_sender(&traffic.tasks[task_index]);
-        //     let json_data: serde_json::Value = serde_json::from_str(&data)
-        //         .unwrap_or(serde_json::json!({ "message": data }));
-        //     sender.send(json_data).await?;
-        // }
         Commands::Worker { task_index, config: config_path } => {
             let traffic_content = std::fs::read_to_string(config_path)?;
             let traffic = TrafficConfig::from_yaml(&traffic_content)?;
             let task = &traffic.tasks[task_index];
             let sender = create_sender(task).await?;
-            sender::run_periodic(sender, task.frequency, task.duration.clone()).await?;
+            run_periodic(sender, task.frequency, task.duration.clone()).await?;
         }
         Commands::Init { config: config_path, output } => {
             let dep_content = std::fs::read_to_string(&config_path)?;
             let dep_config = DeploymentConfig::from_yaml(&dep_content)?;
             
-            // Assume traffic.yaml exists in same dir or default
             let traffic_content = std::fs::read_to_string("config/traffic.yaml").unwrap_or_default();
             let traffic_config = TrafficConfig::from_yaml(&traffic_content)?;
 
@@ -65,7 +50,6 @@ async fn main() -> anyhow::Result<()> {
                 anyhow::bail!("Failed to apply configmap.yaml");
             }
 
-            // Then apply all other manifests in the directory
             let status = std::process::Command::new("kubectl")
                 .args(["apply", "-f", &input])
                 .status()?;
